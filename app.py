@@ -45,31 +45,41 @@ st.sidebar.info("This AI model predicts temperature based on weather conditions.
 st.title("🌦 Weather prediction using redression techniques")
 st.subheader("🌍 Live Weather Data")
 
-API_KEY = ["OPENWEATHERMAP_API_KEY"]  # Replace with your OpenWeatherMap API key
-city = st.text_input("Enter City", "Roorkee")
+API_KEY = "29332d5800510207ba7ec04e0a56ef62"
+
+city = st.text_input("Enter City")
 
 if st.button("Get Live Weather"):
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-
-    response = requests.get(url)
-    data_api = response.json()
-
-    if response.status_code == 200:
-
-        temperature = data_api["main"]["temp"]
-        humidity = data_api["main"]["humidity"]
-        pressure = data_api["main"]["pressure"]
-        wind_speed = data_api["wind"]["speed"]
-
-        st.write("Temperature:", temperature)
-        st.write("Humidity:", humidity)
-        st.write("Pressure:", pressure)
-        st.write("Wind Speed:", wind_speed)
-
+    if city == "":
+        st.warning("Please enter a city name")
     else:
-        st.error("City not found or API error.")
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
 
+        try:
+            response = requests.get(url)
+            data_api = response.json()
+            st.write(data_api)
+
+            if response.status_code == 200:
+
+                temperature = data_api["main"]["temp"]
+                humidity = data_api["main"]["humidity"]
+                pressure = data_api["main"]["pressure"]
+                wind_speed = data_api["wind"]["speed"]
+
+                st.success("Weather Data Found")
+
+                st.write("🌡 Temperature:", temperature, "°C")
+                st.write("💧 Humidity:", humidity, "%")
+                st.write("🌬 Wind Speed:", wind_speed, "m/s")
+                st.write("📊 Pressure:", pressure, "hPa")
+
+            else:
+                st.error("City not found. Please try another city.")
+
+        except:
+            st.error("Weather API connection failed.")
 
 
 

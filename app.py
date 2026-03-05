@@ -1,5 +1,6 @@
 
 from attr import s
+import requests
 import streamlit as st
 import numpy as np
 import os 
@@ -44,7 +45,7 @@ st.sidebar.info("This AI model predicts temperature based on weather conditions.
 st.title("🌦 Weather prediction using redression techniques")
 st.subheader("🌍 Live Weather Data")
 
-API_KEY = "your_openweathermap_api_key_here"
+API_KEY = ["OPENWEATHERMAP_API_KEY"]  # Replace with your OpenWeatherMap API key
 city = st.text_input("Enter City", "Roorkee")
 
 if st.button("Get Live Weather"):
@@ -54,13 +55,20 @@ if st.button("Get Live Weather"):
     response = requests.get(url)
     data_api = response.json()
 
-    temperature = data_api["main"]["temp"]
-    humidity = data_api["main"]["humidity"]
-    wind = data_api["wind"]["speed"]
+    if response.status_code == 200:
 
-    st.write("Temperature:", temperature, "°C")
-    st.write("Humidity:", humidity, "%")
-    st.write("Wind Speed:", wind, "m/s")
+        temperature = data_api["main"]["temp"]
+        humidity = data_api["main"]["humidity"]
+        pressure = data_api["main"]["pressure"]
+        wind_speed = data_api["wind"]["speed"]
+
+        st.write("Temperature:", temperature)
+        st.write("Humidity:", humidity)
+        st.write("Pressure:", pressure)
+        st.write("Wind Speed:", wind_speed)
+
+    else:
+        st.error("City not found or API error.")
 
 
 

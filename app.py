@@ -15,6 +15,12 @@ import plotly.graph_objects as go
 import pandas as pd
 import matplotlib.pyplot as plt
 
+if "weather" not in st.session_state:
+    st.session_state.weather = None
+
+if "location" not in st.session_state:
+    st.session_state.location = None
+
 if not os.path.exists("weather_model.pkl"):
     train_model()
 
@@ -60,14 +66,15 @@ city = st.text_input("Enter City", key="city_input")
 
 st.caption("Tip: Small villages may not appear in search. Use the map below to get weather anywhere.")
 st.caption("Example: Delhi, Mumbai, London, Rudrapur")
+
 if st.button("Get Live Weather"):
 
     if city == "":
         st.warning("Please enter a location")
 
     else:
-        # 1️⃣ Convert city/village to coordinates
-        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&country=IN"
+
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=10&language=en&format=json"
         geo_response = requests.get(geo_url)
         geo_data = geo_response.json()
 
@@ -76,45 +83,56 @@ if st.button("Get Live Weather"):
             lat = geo_data["results"][0]["latitude"]
             lon = geo_data["results"][0]["longitude"]
 
-            # 2️⃣ Create weather URL
+            st.session_state.location = geo_data["results"][0]
+
             url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
 
-            # 3️⃣ Request weather
             response = requests.get(url)
             data_api = response.json()
-
             if response.status_code == 200:
-
-                temperature = data_api["main"]["temp"]
-                humidity = data_api["main"]["humidity"]
-                pressure = data_api["main"]["pressure"]
-                wind_speed = data_api["wind"]["speed"]
-
-                col1, col2, col3, col4 = st.columns(4)
-
-                col1.metric("🌡 Temp", f"{temperature} °C")
-                col2.metric("💧 Humidity", f"{humidity}%")
-                col3.metric("📊 Pressure", f"{pressure} hPa")
-                col4.metric("🌬 Wind", f"{wind_speed} m/s")
+                st.session_state.weather = data_api
 
         else:
-            st.error("Location not found.")
+            st.session_state.weather = None 
+
+if "weather" in st.session_state and st.session_state.weather:
+
+    data_api = st.session_state.weather
+
+    temperature = data_api["main"]["temp"]
+    humidity = data_api["main"]["humidity"]
+    pressure = data_api["main"]["pressure"]
+    wind_speed = data_api["wind"]["speed"]
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("🌡 Temp", f"{temperature} °C")
+    col2.metric("💧 Humidity", f"{humidity}%")
+    col3.metric("📊 Pressure", f"{pressure} hPa")
+    col4.metric("🌬 Wind", f"{wind_speed} m/s")
+
+elif "weather" in st.session_state and st.session_state.weather is None:
+    st.error("Location not found.")               
 
 
 # DISPLAY WEATHER (this part runs every refresh)
 if "weather" in st.session_state and st.session_state.weather:
 
     weather = st.session_state.weather
+    location = st.session_state.location
 
-    st.success(f"Weather data for {weather['city']}")
+    place = location["name"]
+    state = location.get("admin1", "")
+    country = location["country"]
+
+    st.success(f"Weather for {place}, {state}, {country}")
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("🌡 Temp", f"{weather['temperature']} °C")
-    col2.metric("💧 Humidity", f"{weather['humidity']}%")
-    col3.metric("📊 Pressure", f"{weather['pressure']} hPa")
-    col4.metric("🌬 Wind", f"{weather['wind_speed']} m/s")
-
+    col1.metric("🌡 Temp", f"{weather['main']['temp']} °C")
+    col2.metric("💧 Humidity", f"{weather['main']['humidity']}%")
+    col3.metric("📊 Pressure", f"{weather['main']['pressure']} hPa")
+    col4.metric("🌬 Wind", f"{weather['wind']['speed']} m/s")
 elif "weather" in st.session_state and st.session_state.weather is None:
     st.error("City not found. Try nearest big city.")
     

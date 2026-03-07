@@ -57,6 +57,7 @@ API_KEY = "29332d5800510207ba7ec04e0a56ef62"
 
 
 city = st.text_input("Enter City", key="city_input")
+st.caption("Example: Delhi, Mmumbai, London, Rudrapur")
 
 if st.button("Get Live Weather", key="city_weather"):
 
@@ -64,7 +65,7 @@ if st.button("Get Live Weather", key="city_weather"):
         st.warning("Please enter a city name")
 
     else:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city},IN&appid={API_KEY}&units=metric"
 
         response = requests.get(url)
         data_api = response.json()
@@ -82,7 +83,7 @@ if st.button("Get Live Weather", key="city_weather"):
             st.write(f"🌬 Wind Speed: {wind_speed} m/s")
 
         else:
-            st.error(data_api["message"]) 
+            st.error("City not found. Try nearest big city.")
     
 
     if response.status_code == 200:

@@ -45,7 +45,7 @@ st.sidebar.info("This AI model predicts temperature based on weather conditions.
 # Title
 st.title("🌦 Weather prediction using redression techniques")
 st.subheader("🌍 Live Weather Data")
-st.subheader("📍 Get Weather by Location")
+
 
 
 
@@ -55,79 +55,75 @@ API_KEY = "29332d5800510207ba7ec04e0a56ef62"
 
 
 
-
+st.subheader("📍 Get Weather by Location")
 city = st.text_input("Enter City", key="city_input")
-st.caption("Example: Delhi, Mmumbai, London, Rudrapur")
 
-if st.button("Get Live Weather", key="city_weather"):
+st.caption("Tip: Small villages may not appear in search. Use the map below to get weather anywhere.")
+st.caption("Example: Delhi, Mumbai, London, Rudrapur")
+if st.button("Get Live Weather"):
 
     if city == "":
-        st.warning("Please enter a city name")
+        st.warning("Please enter a location")
 
     else:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city},IN&appid={API_KEY}&units=metric"
+        # 1️⃣ Convert city/village to coordinates
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&country=IN"
+        geo_response = requests.get(geo_url)
+        geo_data = geo_response.json()
 
-        response = requests.get(url)
-        data_api = response.json()
+        if "results" in geo_data:
 
-        if response.status_code == 200:
+            lat = geo_data["results"][0]["latitude"]
+            lon = geo_data["results"][0]["longitude"]
 
-            temperature = data_api["main"]["temp"]
-            humidity = data_api["main"]["humidity"]
-            pressure = data_api["main"]["pressure"]
-            wind_speed = data_api["wind"]["speed"]
+            # 2️⃣ Create weather URL
+            url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
 
-            st.write(f"🌡 Temperature: {temperature} °C")
-            st.write(f"💧 Humidity: {humidity}%")
-            st.write(f"📊 Pressure: {pressure} hPa")
-            st.write(f"🌬 Wind Speed: {wind_speed} m/s")
+            # 3️⃣ Request weather
+            response = requests.get(url)
+            data_api = response.json()
+
+            if response.status_code == 200:
+
+                temperature = data_api["main"]["temp"]
+                humidity = data_api["main"]["humidity"]
+                pressure = data_api["main"]["pressure"]
+                wind_speed = data_api["wind"]["speed"]
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                col1.metric("🌡 Temp", f"{temperature} °C")
+                col2.metric("💧 Humidity", f"{humidity}%")
+                col3.metric("📊 Pressure", f"{pressure} hPa")
+                col4.metric("🌬 Wind", f"{wind_speed} m/s")
 
         else:
-            st.error("City not found. Try nearest big city.")
+            st.error("Location not found.")
+
+
+# DISPLAY WEATHER (this part runs every refresh)
+if "weather" in st.session_state and st.session_state.weather:
+
+    weather = st.session_state.weather
+
+    st.success(f"Weather data for {weather['city']}")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("🌡 Temp", f"{weather['temperature']} °C")
+    col2.metric("💧 Humidity", f"{weather['humidity']}%")
+    col3.metric("📊 Pressure", f"{weather['pressure']} hPa")
+    col4.metric("🌬 Wind", f"{weather['wind_speed']} m/s")
+
+elif "weather" in st.session_state and st.session_state.weather is None:
+    st.error("City not found. Try nearest big city.")
     
 
-    if response.status_code == 200:
-
-        temperature = round(data_api["main"]["temp"], 2)
-        humidity = data_api["main"]["humidity"]
-        pressure = data_api["main"]["pressure"]
-        wind_speed = data_api["wind"]["speed"]
-
-        st.write(f"Temperature:, {temperature} °C")
-        st.write(f"Humidity:, {humidity}%")
-        st.write(f"Pressure:, {pressure} nPa")
-        st.write(f"Wind Speed:", {wind_speed}, "m/s")
-
-    else:
-        st.error("Location weather not found.")
+    
 
 
-
-    if city == "":
-        st.warning("Please enter a city name")
-
-    else:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-
-        response = requests.get(url)
-        data_api = response.json()
-
-        if response.status_code == 200:
-
-            temperature = round(data_api["main"]["temp"], 2)
-            humidity = data_api["main"]["humidity"]
-            pressure = data_api["main"]["pressure"]
-            wind_speed = data_api["wind"]["speed"]
-
-            st.write(f"Temperature:, {temperature} °C")
-            st.write(f"Humidity:, {humidity}%")
-            st.write(f"Pressure:, {pressure} nPa")
-            st.write(f"Wind Speed:, {wind_speed} m/s")
-
-        else:
-            st.error("City not found.")
-                
-        st.subheader("🌍 Click on Map to Get Weather")
+    
+st.subheader("🌍 Click on Map to Get Weather")
 
 st.subheader("📍 Get Weather by Coordinates")
 
@@ -159,10 +155,12 @@ if map_data and map_data["last_clicked"]:
         pressure = data_api["main"]["pressure"]
         wind_speed = data_api["wind"]["speed"]
 
-        st.write(f"🌡 Temperature: {temperature} °C")
-        st.write(f"💧 Humidity: {humidity}%")
-        st.write(f"🌬 Wind Speed: {wind_speed} m/s")
-        st.write(f"📊 Pressure: {pressure} hPa")
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("🌡 Temp", f"{temperature} °C")
+        col2.metric("💧 Humidity", f"{humidity}%")
+        col3.metric("📊 Pressure", f"{pressure} hPa")
+        col4.metric("🌬 Wind", f"{wind_speed} m/s")
 
     else:
         st.error("Weather data not available.")

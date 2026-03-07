@@ -1,4 +1,5 @@
-
+import folium
+from streamlit_folium import st_folium
 from attr import s
 import requests
 import streamlit as st
@@ -44,42 +45,126 @@ st.sidebar.info("This AI model predicts temperature based on weather conditions.
 # Title
 st.title("🌦 Weather prediction using redression techniques")
 st.subheader("🌍 Live Weather Data")
+st.subheader("📍 Get Weather by Location")
+
+
 
 API_KEY = "29332d5800510207ba7ec04e0a56ef62"
 
-city = st.text_input("Enter City")
 
-if st.button("Get Live Weather"):
+
+
+
+
+city = st.text_input("Enter City", key="city_input")
+
+if st.button("Get Live Weather", key="city_weather"):
 
     if city == "":
         st.warning("Please enter a city name")
+
     else:
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
 
-        try:
-            response = requests.get(url)
-            data_api = response.json()
-            st.write(data_api)
+        response = requests.get(url)
+        data_api = response.json()
 
-            if response.status_code == 200:
+        if response.status_code == 200:
 
-                temperature = data_api["main"]["temp"]
-                humidity = data_api["main"]["humidity"]
-                pressure = data_api["main"]["pressure"]
-                wind_speed = data_api["wind"]["speed"]
+            temperature = data_api["main"]["temp"]
+            humidity = data_api["main"]["humidity"]
+            pressure = data_api["main"]["pressure"]
+            wind_speed = data_api["wind"]["speed"]
 
-                st.success("Weather Data Found")
+            st.write(f"🌡 Temperature: {temperature} °C")
+            st.write(f"💧 Humidity: {humidity}%")
+            st.write(f"📊 Pressure: {pressure} hPa")
+            st.write(f"🌬 Wind Speed: {wind_speed} m/s")
 
-                st.write("🌡 Temperature:", temperature, "°C")
-                st.write("💧 Humidity:", humidity, "%")
-                st.write("🌬 Wind Speed:", wind_speed, "m/s")
-                st.write("📊 Pressure:", pressure, "hPa")
+        else:
+            st.error(data_api["message"]) 
+    
 
-            else:
-                st.error("City not found. Please try another city.")
+    if response.status_code == 200:
 
-        except:
-            st.error("Weather API connection failed.")
+        temperature = round(data_api["main"]["temp"], 2)
+        humidity = data_api["main"]["humidity"]
+        pressure = data_api["main"]["pressure"]
+        wind_speed = data_api["wind"]["speed"]
+
+        st.write(f"Temperature:, {temperature} °C")
+        st.write(f"Humidity:, {humidity}%")
+        st.write(f"Pressure:, {pressure} nPa")
+        st.write(f"Wind Speed:", {wind_speed}, "m/s")
+
+    else:
+        st.error("Location weather not found.")
+
+
+
+    if city == "":
+        st.warning("Please enter a city name")
+
+    else:
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+
+        response = requests.get(url)
+        data_api = response.json()
+
+        if response.status_code == 200:
+
+            temperature = round(data_api["main"]["temp"], 2)
+            humidity = data_api["main"]["humidity"]
+            pressure = data_api["main"]["pressure"]
+            wind_speed = data_api["wind"]["speed"]
+
+            st.write(f"Temperature:, {temperature} °C")
+            st.write(f"Humidity:, {humidity}%")
+            st.write(f"Pressure:, {pressure} nPa")
+            st.write(f"Wind Speed:, {wind_speed} m/s")
+
+        else:
+            st.error("City not found.")
+                
+        st.subheader("🌍 Click on Map to Get Weather")
+
+st.subheader("📍 Get Weather by Coordinates")
+
+
+
+# Create map centered on India
+m = folium.Map(location=[20.5937, 78.9629], zoom_start=4)
+
+# Show map
+map_data = st_folium(m, width=700, height=500)
+
+# Detect click on map
+if map_data and map_data["last_clicked"]:
+
+    lat = map_data["last_clicked"]["lat"]
+    lon = map_data["last_clicked"]["lng"]
+
+    st.write("Selected Location:", lat, lon)
+
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+
+    response = requests.get(url)
+    data_api = response.json()
+
+    if response.status_code == 200:
+
+        temperature = data_api["main"]["temp"]
+        humidity = data_api["main"]["humidity"]
+        pressure = data_api["main"]["pressure"]
+        wind_speed = data_api["wind"]["speed"]
+
+        st.write(f"🌡 Temperature: {temperature} °C")
+        st.write(f"💧 Humidity: {humidity}%")
+        st.write(f"🌬 Wind Speed: {wind_speed} m/s")
+        st.write(f"📊 Pressure: {pressure} hPa")
+
+    else:
+        st.error("Weather data not available.")
 
 
 

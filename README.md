@@ -31,3 +31,11 @@ requirements.txt – dependencies
 
 pip install -r requirements.txt
 streamlit run app.py
+
+## 🌐 Live Demo
+Try the deployed application here:
+
+https://ayan-weather-ml.streamlit.app/
+
+## Deployment
+This applicaation is deployed using Streamlit Cloud.
